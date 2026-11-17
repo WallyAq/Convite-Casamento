@@ -53,7 +53,7 @@ document.querySelector("#app").innerHTML = `
     <h1 class="couple-names layer" id="couple-title">${nomes()}</h1>
     <p class="invitation-line layer">CONVIDAM PARA O SEU CASAMENTO</p>
 
-    <div class="portrait layer"><img class="photo" src="assets/pb.jpg" width="1800" height="2400" alt="Maria Bianca abraçando Enderson em uma foto em preto e branco." loading="lazy"></div>
+    <div class="portrait layer"><img class="photo" src="assets/cfe8509e-09df-47cb-ba42-c046c54565bc-copied-media~2.jpg" width="1800" height="2400" alt="Detalhe das mãos de Maria Bianca e Enderson com as alianças." loading="lazy"></div>
     <p class="date-intro layer">A REALIZAR-SE NO DIA</p>
     <div class="date-card layer">
       <div class="date-numbers" aria-label="${escapeHTML(`${convite.dia}/${convite.mes}/${convite.ano}`)}"><span>${escapeHTML(convite.dia)}</span><span class="date-divider" aria-hidden="true">|</span><span>${escapeHTML(convite.mes)}</span><span class="date-divider" aria-hidden="true">|</span><span>${escapeHTML(convite.ano)}</span></div>

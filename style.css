@@ -95,7 +95,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #62625d; outline-offs
   z-index: -1;
   mask-image: linear-gradient(180deg, transparent, #000 16%, #000 72%, transparent 100%);
 }
-.portrait .photo { object-position: center top; }
+.portrait .photo { object-position: center bottom; }
 .date-intro { top: 282cqw; font-size: 4.25cqw; }
 .date-card {
   top: 291.8cqw;
