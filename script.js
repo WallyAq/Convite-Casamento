@@ -76,38 +76,170 @@ document.querySelector("#app").innerHTML = `
     <h2 id="information-title"></h2><p id="information-description"></p>
     <form method="dialog"><button class="dialog-close" autofocus>Fechar</button></form>
   </dialog>
-  <audio id="background-music" autoplay loop preload="auto" aria-hidden="true">
-    <source src="assets/Eu%20e%20Minha%20Casa_spotdown.org.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="background-music" src="assets/Eu%20e%20Minha%20Casa_spotdown.org.mp3" loop preload="metadata" aria-hidden="true"></audio>
+  <button class="music-toggle" type="button" aria-controls="background-music" aria-label="Ativar música" aria-pressed="false" data-state="paused">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13M9 8l12-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="6" cy="18" rx="3" ry="2.5" fill="currentColor"/><ellipse cx="18" cy="16" rx="3" ry="2.5" fill="currentColor"/></svg>
+    <span>Ativar música</span>
+  </button>
+  <span class="music-status" role="status" aria-live="polite"></span>
 `;
 
 const musica = document.querySelector("#background-music");
+const botaoMusica = document.querySelector(".music-toggle");
+const statusMusica = document.querySelector(".music-status");
 musica.volume = 0.35;
 
+// Uma única tentativa pode estar em andamento. Perder foco invalida até um play pendente.
+let tentativaMusica = 0;
+let desejaTocar = false;
+let iniciandoMusica = false;
+let jaTocou = false;
+let estadoMusica = "paused";
+let paginaAtiva = !document.hidden;
+
+const podeTocarMusica = () => paginaAtiva && !document.hidden;
+
+function atualizarControleMusica() {
+  const tocando = estadoMusica === "playing" && !musica.paused;
+  const texto = iniciandoMusica ? "Cancelar música"
+    : tocando ? "Pausar música"
+    : estadoMusica === "error" ? "Tentar música"
+    : jaTocou ? "Continuar música" : "Ativar música";
+  botaoMusica.dataset.state = estadoMusica;
+  botaoMusica.setAttribute("aria-pressed", String(tocando));
+  botaoMusica.setAttribute("aria-busy", String(iniciandoMusica));
+  botaoMusica.setAttribute("aria-label", texto);
+  botaoMusica.querySelector("span").textContent = texto;
+}
+
+function pausarMusica() {
+  tentativaMusica += 1;
+  desejaTocar = false;
+  iniciandoMusica = false;
+  estadoMusica = "paused";
+  musica.pause();
+  // Não altere currentTime: a retomada manual continua do mesmo ponto.
+  atualizarControleMusica();
+}
+
 async function tocarMusica() {
+  if (!podeTocarMusica() || iniciandoMusica || desejaTocar) return;
+  const tentativaAtual = ++tentativaMusica;
+  desejaTocar = true;
+  iniciandoMusica = true;
+  estadoMusica = "loading";
+  statusMusica.textContent = "";
+  atualizarControleMusica();
   try {
+    if (musica.error) musica.load();
     await musica.play();
-  } catch {
-    // O navegador pode exigir um toque antes de permitir áudio com som.
+    if (tentativaAtual !== tentativaMusica) return;
+    if (!podeTocarMusica() || !desejaTocar) {
+      pausarMusica();
+      return;
+    }
+    iniciandoMusica = false;
+    estadoMusica = "playing";
+    atualizarControleMusica();
+  } catch (error) {
+    if (tentativaAtual !== tentativaMusica) return;
+    desejaTocar = false;
+    iniciandoMusica = false;
+    if (error.name === "NotAllowedError") {
+      estadoMusica = "blocked";
+      statusMusica.textContent = "Para ouvir a música, use o botão Ativar música.";
+    } else if (error.name === "AbortError") {
+      estadoMusica = "paused";
+    } else {
+      estadoMusica = "error";
+      statusMusica.textContent = "Não foi possível reproduzir a música. Você pode tentar novamente pelo botão.";
+    }
+    atualizarControleMusica();
   }
 }
 
-function iniciarMusicaAoInteragir(event) {
-  if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
-  if (musica.paused) void tocarMusica();
-}
+botaoMusica.addEventListener("click", () => {
+  if (desejaTocar || !musica.paused) pausarMusica();
+  else void tocarMusica();
+});
 
-document.addEventListener("pointerdown", iniciarMusicaAoInteragir);
-document.addEventListener("click", iniciarMusicaAoInteragir);
-document.addEventListener("keydown", iniciarMusicaAoInteragir);
+musica.addEventListener("play", () => {
+  if (!desejaTocar || !podeTocarMusica()) pausarMusica();
+});
 
 musica.addEventListener("playing", () => {
-  document.removeEventListener("pointerdown", iniciarMusicaAoInteragir);
-  document.removeEventListener("click", iniciarMusicaAoInteragir);
-  document.removeEventListener("keydown", iniciarMusicaAoInteragir);
-}, { once: true });
+  if (!desejaTocar || !podeTocarMusica()) {
+    pausarMusica();
+    return;
+  }
+  jaTocou = true;
+  iniciandoMusica = false;
+  estadoMusica = "playing";
+  atualizarControleMusica();
+});
 
+musica.addEventListener("pause", () => {
+  if (musica.paused) pausarMusica();
+});
+
+musica.addEventListener("error", () => {
+  pausarMusica();
+  estadoMusica = "error";
+  statusMusica.textContent = "Não foi possível carregar a música. Você pode tentar novamente pelo botão.";
+  atualizarControleMusica();
+});
+
+function interromperMusica() {
+  paginaAtiva = false;
+  pausarMusica();
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) interromperMusica();
+  else paginaAtiva = document.hasFocus();
+});
+window.addEventListener("blur", interromperMusica);
+window.addEventListener("pagehide", interromperMusica);
+// Recuperar foco ou voltar pelo histórico apenas habilita a retomada manual.
+window.addEventListener("focus", () => { paginaAtiva = !document.hidden; });
+window.addEventListener("pageshow", () => { paginaAtiva = !document.hidden && document.hasFocus(); });
+
+// O elemento começa em zero; esta é a única tentativa automática por carregamento.
 void tocarMusica();
+
+function configurarAnimacoes() {
+  const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (reduzirMovimento.matches || !("IntersectionObserver" in window)) return;
+
+  const elementos = document.querySelectorAll(
+    ".hero, .monogram, .verse, .blessing, .families, .couple-names > span, .invitation-line, .portrait, .date-intro, .date-card, .venue, .instructions, .actions > .action, .closing-photo, .signature > p"
+  );
+  const observador = new IntersectionObserver((entradas) => {
+    entradas.forEach(({ target, isIntersecting }) => {
+      if (!isIntersecting) return;
+      target.classList.add("is-visible");
+      observador.unobserve(target);
+    });
+  }, { threshold: 0.08, rootMargin: "0px 0px 24px 0px" });
+
+  elementos.forEach((elemento) => {
+    elemento.classList.add("reveal");
+    if (elemento.matches(".hero, .monogram, .portrait, .closing-photo")) elemento.classList.add("reveal-fade");
+    if (elemento.parentElement.matches(".couple-names, .actions")) {
+      const ordem = Array.from(elemento.parentElement.children).indexOf(elemento);
+      elemento.style.setProperty("--reveal-delay", `${ordem * 90}ms`);
+    }
+    observador.observe(elemento);
+  });
+
+  reduzirMovimento.addEventListener("change", (event) => {
+    if (!event.matches) return;
+    observador.disconnect();
+    elementos.forEach((elemento) => elemento.classList.add("is-visible"));
+  });
+}
+
+configurarAnimacoes();
 
 const information = document.querySelector(".information");
 const descriptions = {
