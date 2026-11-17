@@ -188,20 +188,42 @@ html { scroll-behavior: smooth; }
   50% { translate: 0 -2px; }
 }
 
-.action, .action.reveal, .dialog-close {
+.action, .action.reveal, .dialog-close, .music-toggle {
   transition: opacity .9s ease var(--reveal-delay, 0ms), translate .35s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 @media (hover: hover) {
-  .action.is-visible:hover, .dialog-close:hover {
+  .action.is-visible:hover, .dialog-close:hover, .music-toggle:hover {
     translate: 0 -2px;
     box-shadow: 0 4px 12px #0000000d;
   }
 }
-.action:active, .dialog-close:active { translate: none; }
+.action:active, .dialog-close:active, .music-toggle:active { translate: none; }
 .information[open] { animation: dialog-arrive .3s ease both; }
 .information[open]::backdrop { animation: backdrop-arrive .3s ease both; }
 @keyframes dialog-arrive { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: none; } }
 @keyframes backdrop-arrive { from { opacity: 0; } to { opacity: 1; } }
+
+.music-toggle {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 1px solid #9b9b98;
+  border-radius: 50%;
+  color: #646461;
+  background: #fffffff2;
+  box-shadow: 0 2px 10px #0000000d;
+  cursor: pointer;
+}
+.music-toggle svg { grid-area: 1 / 1; width: 22px; height: 22px; }
+.music-toggle .music-pause { display: none; }
+.music-toggle[data-playing="true"] .music-play { display: none; }
+.music-toggle[data-playing="true"] .music-pause { display: block; }
 
 @media (max-width: 600px) {
   .invitation {
@@ -280,5 +302,5 @@ html { scroll-behavior: smooth; }
   html { scroll-behavior: auto !important; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
   .reveal { opacity: 1; translate: none; }
-  .action, .dialog-close { translate: none !important; }
+  .action, .dialog-close, .music-toggle { translate: none !important; }
 }

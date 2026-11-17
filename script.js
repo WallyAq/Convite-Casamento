@@ -77,9 +77,14 @@ document.querySelector("#app").innerHTML = `
     <form method="dialog"><button class="dialog-close" autofocus>Fechar</button></form>
   </dialog>
   <audio id="background-music" src="assets/Eu%20e%20Minha%20Casa_spotdown.org.mp3" loop preload="metadata" aria-hidden="true"></audio>
+  <button class="music-toggle" type="button" aria-controls="background-music" aria-label="Reproduzir música" aria-pressed="false" title="Reproduzir música" data-playing="false">
+    <svg class="music-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" fill="currentColor"/></svg>
+    <svg class="music-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg>
+  </button>
 `;
 
 const musica = document.querySelector("#background-music");
+const botaoMusica = document.querySelector(".music-toggle");
 musica.volume = 0.35;
 
 // Uma única tentativa pode estar em andamento. Perder foco invalida até um play pendente.
@@ -90,8 +95,19 @@ let tentativaAutomaticaPendente = false;
 let paginaAtiva = !document.hidden;
 let inicioAutomaticoTentado = false;
 let musicaJaIniciou = false;
+let pausaManual = false;
 
 const podeTocarMusica = () => paginaAtiva && !document.hidden;
+
+function atualizarBotaoMusica() {
+  const ativo = !musica.paused || iniciandoMusica;
+  const descricao = ativo ? "Pausar música" : "Reproduzir música";
+  botaoMusica.dataset.playing = String(ativo);
+  botaoMusica.setAttribute("aria-pressed", String(ativo));
+  botaoMusica.setAttribute("aria-busy", String(iniciandoMusica));
+  botaoMusica.setAttribute("aria-label", descricao);
+  botaoMusica.title = descricao;
+}
 
 function pausarMusica() {
   tentativaMusica += 1;
@@ -99,6 +115,7 @@ function pausarMusica() {
   iniciandoMusica = false;
   tentativaAutomaticaPendente = false;
   musica.pause();
+  atualizarBotaoMusica();
 }
 
 async function tocarMusica({ porInteracao = false } = {}) {
@@ -113,6 +130,7 @@ async function tocarMusica({ porInteracao = false } = {}) {
   desejaTocar = true;
   iniciandoMusica = true;
   tentativaAutomaticaPendente = !porInteracao;
+  atualizarBotaoMusica();
   try {
     if (musica.error) musica.load();
     await musica.play();
@@ -123,17 +141,19 @@ async function tocarMusica({ porInteracao = false } = {}) {
     }
     iniciandoMusica = false;
     tentativaAutomaticaPendente = false;
+    atualizarBotaoMusica();
   } catch {
     if (tentativaAtual !== tentativaMusica) return;
     desejaTocar = false;
     iniciandoMusica = false;
     tentativaAutomaticaPendente = false;
+    atualizarBotaoMusica();
     // Se o autoplay for bloqueado, aguarde uma interação real do visitante.
   }
 }
 
 function iniciarMusicaAoInteragir(event) {
-  if (!event.isTrusted || document.hidden) return;
+  if (!event.isTrusted || document.hidden || pausaManual || botaoMusica.contains(event.target)) return;
   if (event.type === "keydown" && !["Enter", " ", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
   paginaAtiva = true;
   inicioAutomaticoTentado = true;
@@ -145,6 +165,18 @@ function iniciarMusicaAoInteragir(event) {
 document.addEventListener("touchend", iniciarMusicaAoInteragir, { capture: true, passive: true });
 document.addEventListener("click", iniciarMusicaAoInteragir, true);
 document.addEventListener("keydown", iniciarMusicaAoInteragir, true);
+
+botaoMusica.addEventListener("click", () => {
+  inicioAutomaticoTentado = true;
+  if (!musica.paused || iniciandoMusica || desejaTocar) {
+    pausaManual = true;
+    pausarMusica();
+  } else {
+    pausaManual = false;
+    paginaAtiva = !document.hidden;
+    void tocarMusica({ porInteracao: true });
+  }
+});
 
 let ultimaInteracaoDeRolagem = -Infinity;
 
@@ -166,6 +198,7 @@ document.addEventListener("wheel", iniciarMusicaAoRolar, { capture: true, passiv
 
 musica.addEventListener("play", () => {
   if (!desejaTocar || !podeTocarMusica()) pausarMusica();
+  else atualizarBotaoMusica();
 });
 
 musica.addEventListener("playing", () => {
@@ -176,6 +209,7 @@ musica.addEventListener("playing", () => {
   iniciandoMusica = false;
   tentativaAutomaticaPendente = false;
   musicaJaIniciou = true;
+  atualizarBotaoMusica();
 });
 
 musica.addEventListener("pause", () => {
@@ -191,7 +225,7 @@ function interromperMusica() {
 }
 
 function tentarInicioAutomatico() {
-  if (inicioAutomaticoTentado || musicaJaIniciou || !podeTocarMusica() || !document.hasFocus()) return;
+  if (pausaManual || inicioAutomaticoTentado || musicaJaIniciou || !podeTocarMusica() || !document.hasFocus()) return;
   inicioAutomaticoTentado = true;
   void tocarMusica();
 }
