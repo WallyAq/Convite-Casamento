@@ -86,6 +86,7 @@ musica.volume = 0.35;
 let tentativaMusica = 0;
 let desejaTocar = false;
 let iniciandoMusica = false;
+let tentativaAutomaticaPendente = false;
 let paginaAtiva = !document.hidden;
 let inicioAutomaticoTentado = false;
 let musicaJaIniciou = false;
@@ -96,14 +97,22 @@ function pausarMusica() {
   tentativaMusica += 1;
   desejaTocar = false;
   iniciandoMusica = false;
+  tentativaAutomaticaPendente = false;
   musica.pause();
 }
 
-async function tocarMusica() {
-  if (!podeTocarMusica() || iniciandoMusica || desejaTocar) return;
+async function tocarMusica({ porInteracao = false } = {}) {
+  if (!podeTocarMusica()) return;
+  if (iniciandoMusica) {
+    // O toque real precisa chamar play diretamente, mesmo se o autoplay ainda aguarda dados.
+    if (!porInteracao || !tentativaAutomaticaPendente) return;
+    pausarMusica();
+  }
+  if (desejaTocar) return;
   const tentativaAtual = ++tentativaMusica;
   desejaTocar = true;
   iniciandoMusica = true;
+  tentativaAutomaticaPendente = !porInteracao;
   try {
     if (musica.error) musica.load();
     await musica.play();
@@ -113,25 +122,29 @@ async function tocarMusica() {
       return;
     }
     iniciandoMusica = false;
+    tentativaAutomaticaPendente = false;
   } catch {
     if (tentativaAtual !== tentativaMusica) return;
     desejaTocar = false;
     iniciandoMusica = false;
+    tentativaAutomaticaPendente = false;
     // Se o autoplay for bloqueado, aguarde uma interação real do visitante.
   }
 }
 
-function iniciarMusicaNoPrimeiroToque(event) {
-  if (!event.isTrusted || document.hidden || musicaJaIniciou) return;
+function iniciarMusicaAoInteragir(event) {
+  if (!event.isTrusted || document.hidden) return;
   if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
   paginaAtiva = true;
   inicioAutomaticoTentado = true;
-  void tocarMusica();
+  void tocarMusica({ porInteracao: true });
 }
 
-// Toques também geram click no celular; não simule gestos nem repita por timer.
-document.addEventListener("click", iniciarMusicaNoPrimeiroToque);
-document.addEventListener("keydown", iniciarMusicaNoPrimeiroToque);
+// Use o gesto real do Android diretamente, inclusive quando ele não gera um click.
+// O estado de carregamento impede que touchend + click iniciem tentativas duplicadas.
+document.addEventListener("touchend", iniciarMusicaAoInteragir, { capture: true, passive: true });
+document.addEventListener("click", iniciarMusicaAoInteragir, true);
+document.addEventListener("keydown", iniciarMusicaAoInteragir, true);
 
 musica.addEventListener("play", () => {
   if (!desejaTocar || !podeTocarMusica()) pausarMusica();
@@ -143,9 +156,8 @@ musica.addEventListener("playing", () => {
     return;
   }
   iniciandoMusica = false;
+  tentativaAutomaticaPendente = false;
   musicaJaIniciou = true;
-  document.removeEventListener("click", iniciarMusicaNoPrimeiroToque);
-  document.removeEventListener("keydown", iniciarMusicaNoPrimeiroToque);
 });
 
 musica.addEventListener("pause", () => {
