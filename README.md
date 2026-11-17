@@ -14,7 +14,7 @@ Depois acesse `http://127.0.0.1:4173`. Não é necessário instalar dependência
 
 ## Personalizar
 
-Edite o objeto `convite` no início de `script.js`: nomes, pais, data, horário, endereço e links. Os estilos estão em `style.css`. O convite mantém as proporções da referência e se adapta à largura da tela, até 1080 px.
+Edite o objeto `convite` no início de `script.js`: nomes, pais, data, horário, endereço e links. Os estilos estão em `style.css`. O convite se adapta à largura da tela, até 1080 px. Em telas de até 600 px, os blocos acompanham a altura do conteúdo, com margens laterais de 24 px e botões de pelo menos 48 px de altura; em telas maiores, o layout mantém as proporções da referência.
 
 Os botões de localização da igreja e do sítio abrem o Google Maps com buscas pelos nomes e endereços fornecidos nas imagens. A igreja é o Mosteiro de São Bento, na Rua Maria Ferreira dos Santos, 324, São Bento, Fortaleza/CE. O sítio é a Chácara Encanto das Anas, na Rua Paisagística, 530, Paupina/Messejana, Fortaleza/CE. Os botões de presença e presentes exibem uma orientação para falar com os noivos. Para conectá-los ao WhatsApp, formulário ou lista real, preencha `links.confirmacao` e `links.presentes` com as URLs completas.
 
