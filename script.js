@@ -77,49 +77,24 @@ document.querySelector("#app").innerHTML = `
     <form method="dialog"><button class="dialog-close" autofocus>Fechar</button></form>
   </dialog>
   <audio id="background-music" src="assets/Eu%20e%20Minha%20Casa_spotdown.org.mp3" loop preload="metadata" aria-hidden="true"></audio>
-  <button class="music-toggle" type="button" aria-controls="background-music" aria-label="Ativar música" aria-pressed="false" data-state="paused">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13M9 8l12-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="6" cy="18" rx="3" ry="2.5" fill="currentColor"/><ellipse cx="18" cy="16" rx="3" ry="2.5" fill="currentColor"/></svg>
-    <span>Ativar música</span>
-  </button>
-  <span class="music-status" role="status" aria-live="polite"></span>
 `;
 
 const musica = document.querySelector("#background-music");
-const botaoMusica = document.querySelector(".music-toggle");
-const statusMusica = document.querySelector(".music-status");
 musica.volume = 0.35;
 
 // Uma única tentativa pode estar em andamento. Perder foco invalida até um play pendente.
 let tentativaMusica = 0;
 let desejaTocar = false;
 let iniciandoMusica = false;
-let jaTocou = false;
-let estadoMusica = "paused";
 let paginaAtiva = !document.hidden;
 
 const podeTocarMusica = () => paginaAtiva && !document.hidden;
-
-function atualizarControleMusica() {
-  const tocando = estadoMusica === "playing" && !musica.paused;
-  const texto = iniciandoMusica ? "Cancelar música"
-    : tocando ? "Pausar música"
-    : estadoMusica === "error" ? "Tentar música"
-    : jaTocou ? "Continuar música" : "Ativar música";
-  botaoMusica.dataset.state = estadoMusica;
-  botaoMusica.setAttribute("aria-pressed", String(tocando));
-  botaoMusica.setAttribute("aria-busy", String(iniciandoMusica));
-  botaoMusica.setAttribute("aria-label", texto);
-  botaoMusica.querySelector("span").textContent = texto;
-}
 
 function pausarMusica() {
   tentativaMusica += 1;
   desejaTocar = false;
   iniciandoMusica = false;
-  estadoMusica = "paused";
   musica.pause();
-  // Não altere currentTime: a retomada manual continua do mesmo ponto.
-  atualizarControleMusica();
 }
 
 async function tocarMusica() {
@@ -127,9 +102,6 @@ async function tocarMusica() {
   const tentativaAtual = ++tentativaMusica;
   desejaTocar = true;
   iniciandoMusica = true;
-  estadoMusica = "loading";
-  statusMusica.textContent = "";
-  atualizarControleMusica();
   try {
     if (musica.error) musica.load();
     await musica.play();
@@ -139,29 +111,13 @@ async function tocarMusica() {
       return;
     }
     iniciandoMusica = false;
-    estadoMusica = "playing";
-    atualizarControleMusica();
-  } catch (error) {
+  } catch {
     if (tentativaAtual !== tentativaMusica) return;
     desejaTocar = false;
     iniciandoMusica = false;
-    if (error.name === "NotAllowedError") {
-      estadoMusica = "blocked";
-      statusMusica.textContent = "Para ouvir a música, use o botão Ativar música.";
-    } else if (error.name === "AbortError") {
-      estadoMusica = "paused";
-    } else {
-      estadoMusica = "error";
-      statusMusica.textContent = "Não foi possível reproduzir a música. Você pode tentar novamente pelo botão.";
-    }
-    atualizarControleMusica();
+    // Se o navegador bloquear o autoplay, respeite a restrição sem novas tentativas.
   }
 }
-
-botaoMusica.addEventListener("click", () => {
-  if (desejaTocar || !musica.paused) pausarMusica();
-  else void tocarMusica();
-});
 
 musica.addEventListener("play", () => {
   if (!desejaTocar || !podeTocarMusica()) pausarMusica();
@@ -172,22 +128,14 @@ musica.addEventListener("playing", () => {
     pausarMusica();
     return;
   }
-  jaTocou = true;
   iniciandoMusica = false;
-  estadoMusica = "playing";
-  atualizarControleMusica();
 });
 
 musica.addEventListener("pause", () => {
   if (musica.paused) pausarMusica();
 });
 
-musica.addEventListener("error", () => {
-  pausarMusica();
-  estadoMusica = "error";
-  statusMusica.textContent = "Não foi possível carregar a música. Você pode tentar novamente pelo botão.";
-  atualizarControleMusica();
-});
+musica.addEventListener("error", pausarMusica);
 
 function interromperMusica() {
   paginaAtiva = false;
@@ -200,7 +148,7 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("blur", interromperMusica);
 window.addEventListener("pagehide", interromperMusica);
-// Recuperar foco ou voltar pelo histórico apenas habilita a retomada manual.
+// Recuperar foco ou voltar pelo histórico não reinicia a música.
 window.addEventListener("focus", () => { paginaAtiva = !document.hidden; });
 window.addEventListener("pageshow", () => { paginaAtiva = !document.hidden && document.hasFocus(); });
 
