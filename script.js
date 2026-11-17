@@ -87,6 +87,8 @@ let tentativaMusica = 0;
 let desejaTocar = false;
 let iniciandoMusica = false;
 let paginaAtiva = !document.hidden;
+let inicioAutomaticoTentado = false;
+let musicaJaIniciou = false;
 
 const podeTocarMusica = () => paginaAtiva && !document.hidden;
 
@@ -115,9 +117,21 @@ async function tocarMusica() {
     if (tentativaAtual !== tentativaMusica) return;
     desejaTocar = false;
     iniciandoMusica = false;
-    // Se o navegador bloquear o autoplay, respeite a restrição sem novas tentativas.
+    // Se o autoplay for bloqueado, aguarde uma interação real do visitante.
   }
 }
+
+function iniciarMusicaNoPrimeiroToque(event) {
+  if (!event.isTrusted || document.hidden || musicaJaIniciou) return;
+  if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+  paginaAtiva = true;
+  inicioAutomaticoTentado = true;
+  void tocarMusica();
+}
+
+// Toques também geram click no celular; não simule gestos nem repita por timer.
+document.addEventListener("click", iniciarMusicaNoPrimeiroToque);
+document.addEventListener("keydown", iniciarMusicaNoPrimeiroToque);
 
 musica.addEventListener("play", () => {
   if (!desejaTocar || !podeTocarMusica()) pausarMusica();
@@ -129,6 +143,9 @@ musica.addEventListener("playing", () => {
     return;
   }
   iniciandoMusica = false;
+  musicaJaIniciou = true;
+  document.removeEventListener("click", iniciarMusicaNoPrimeiroToque);
+  document.removeEventListener("keydown", iniciarMusicaNoPrimeiroToque);
 });
 
 musica.addEventListener("pause", () => {
@@ -142,18 +159,33 @@ function interromperMusica() {
   pausarMusica();
 }
 
+function tentarInicioAutomatico() {
+  if (inicioAutomaticoTentado || musicaJaIniciou || !podeTocarMusica() || !document.hasFocus()) return;
+  inicioAutomaticoTentado = true;
+  void tocarMusica();
+}
+
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) interromperMusica();
-  else paginaAtiva = document.hasFocus();
+  else {
+    paginaAtiva = document.hasFocus();
+    tentarInicioAutomatico();
+  }
 });
 window.addEventListener("blur", interromperMusica);
 window.addEventListener("pagehide", interromperMusica);
-// Recuperar foco ou voltar pelo histórico não reinicia a música.
-window.addEventListener("focus", () => { paginaAtiva = !document.hidden; });
-window.addEventListener("pageshow", () => { paginaAtiva = !document.hidden && document.hasFocus(); });
+// Só a primeira abertura pode iniciar automaticamente; voltar após uma pausa não retoma.
+window.addEventListener("focus", () => {
+  paginaAtiva = !document.hidden;
+  tentarInicioAutomatico();
+});
+window.addEventListener("pageshow", () => {
+  paginaAtiva = !document.hidden && document.hasFocus();
+  tentarInicioAutomatico();
+});
 
 // O elemento começa em zero; esta é a única tentativa automática por carregamento.
-void tocarMusica();
+tentarInicioAutomatico();
 
 function configurarAnimacoes() {
   const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
