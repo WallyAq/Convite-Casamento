@@ -22,4 +22,3 @@ O casamento está marcado para `18 / 03 / 2027`, quinta-feira, às `18H`. Os nom
 
 A música `assets/Eu e Minha Casa_spotdown.org.mp3` toca em segundo plano, em repetição, com volume inicial de 35%, sem botão na página. A reprodução começa automaticamente quando o navegador permite; quando exige interação, a música começa no primeiro toque, clique ou uso de Enter/espaço no convite.
 
-Referência: https://studiothaisrhicci.my.canva.site/c-pia-de-c-pia-de-c-pia-de-c-pia-de-ab/page-2
