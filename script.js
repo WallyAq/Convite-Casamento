@@ -134,7 +134,7 @@ async function tocarMusica({ porInteracao = false } = {}) {
 
 function iniciarMusicaAoInteragir(event) {
   if (!event.isTrusted || document.hidden) return;
-  if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+  if (event.type === "keydown" && !["Enter", " ", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
   paginaAtiva = true;
   inicioAutomaticoTentado = true;
   void tocarMusica({ porInteracao: true });
@@ -145,6 +145,24 @@ function iniciarMusicaAoInteragir(event) {
 document.addEventListener("touchend", iniciarMusicaAoInteragir, { capture: true, passive: true });
 document.addEventListener("click", iniciarMusicaAoInteragir, true);
 document.addEventListener("keydown", iniciarMusicaAoInteragir, true);
+
+let ultimaInteracaoDeRolagem = -Infinity;
+
+function iniciarMusicaAoRolar(event) {
+  if (!event.isTrusted || document.hidden || !document.hasFocus()) return;
+  const intervalo = event.timeStamp - ultimaInteracaoDeRolagem;
+  ultimaInteracaoDeRolagem = event.timeStamp;
+  // Uma tentativa por gesto, sem chamar play a cada quadro da rolagem.
+  if (intervalo < 300) return;
+  iniciarMusicaAoInteragir(event);
+}
+
+document.addEventListener("touchstart", (event) => {
+  if (event.isTrusted) ultimaInteracaoDeRolagem = -Infinity;
+}, { capture: true, passive: true });
+document.addEventListener("touchmove", iniciarMusicaAoRolar, { capture: true, passive: true });
+document.addEventListener("wheel", iniciarMusicaAoRolar, { capture: true, passive: true });
+// O scroll de scripts e a restauração de posição não devem iniciar áudio sozinhos.
 
 musica.addEventListener("play", () => {
   if (!desejaTocar || !podeTocarMusica()) pausarMusica();
@@ -168,6 +186,7 @@ musica.addEventListener("error", pausarMusica);
 
 function interromperMusica() {
   paginaAtiva = false;
+  ultimaInteracaoDeRolagem = -Infinity;
   pausarMusica();
 }
 
