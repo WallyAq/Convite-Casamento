@@ -1,0 +1,176 @@
+@font-face {
+  font-family: Invitation;
+  src: url("assets/invitation.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Calligraphy;
+  src: url("assets/calligraphy.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Elegant;
+  src: url("assets/elegant.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: InvitationBold;
+  src: url("assets/sans-bold.woff") format("woff");
+  font-weight: 700;
+  font-display: swap;
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: light; background: #fff; }
+body { margin: 0; color: #171714; background: #fff; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; }
+button, a { touch-action: manipulation; }
+button:focus-visible, a:focus-visible { outline: 3px solid #62625d; outline-offset: 5px; }
+
+.invitation {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 1080px;
+  aspect-ratio: 1080 / 5680;
+  margin-inline: auto;
+  overflow: hidden;
+  container-type: inline-size;
+  font-family: Invitation, Arial, sans-serif;
+  text-align: center;
+}
+
+.invitation p, .invitation h1, .invitation blockquote { margin: 0; }
+.layer { position: absolute; left: 0; width: 100%; }
+.photo { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.hero { top: 0; height: 135cqw; z-index: -1; }
+.hero .photo { object-position: center 48%; filter: blur(0.18cqw); }
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 54%, #fff 96%),
+    linear-gradient(110deg, #ffffffb0 0%, transparent 27%, transparent 80%, #ffffff19 100%);
+}
+
+.monogram { position: absolute; inset: 0; color: #f3f2ef; pointer-events: none; }
+.initial-a { position: absolute; top: 23.5cqw; left: 36.5%; font: 26.5cqw/1 Elegant, Georgia, serif; }
+.initial-b { position: absolute; top: 42cqw; left: 40%; font: 12cqw/1 Calligraphy, cursive; transform: scaleX(1.2); transform-origin: left top; }
+
+.verse { top: 97cqw; left: 8%; width: 84%; }
+.verse p { font-size: 3.7cqw; line-height: 1.5; text-wrap: balance; }
+.verse cite { display: block; margin-top: 2cqw; font-size: 3.25cqw; font-style: normal; letter-spacing: .02em; }
+.blessing { top: 124.5cqw; font-size: 3.9cqw; letter-spacing: .025em; }
+.families {
+  top: 135.8cqw;
+  left: 11.5%;
+  width: 77%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15%;
+  font-size: 3.3cqw;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.couple-names {
+  top: 158.3cqw;
+  font: 3.6cqw/2 Calligraphy, "Brush Script MT", cursive;
+  font-weight: 400;
+}
+.couple-names > span { display: block; }
+.couple-names .second { transform: translateX(7%); }
+.couple-names .and { font-size: .78em; }
+.invitation-line { top: 187.8cqw; font-size: 3.9cqw; letter-spacing: .025em; }
+
+.portrait {
+  top: 197cqw;
+  height: 88cqw;
+  z-index: -1;
+  mask-image: linear-gradient(180deg, transparent, #000 16%, #000 72%, transparent 100%);
+}
+.portrait .photo { object-position: center top; }
+.date-intro { top: 282cqw; font-size: 4.25cqw; }
+.date-card {
+  top: 291.8cqw;
+  left: 10%;
+  width: 80%;
+  height: 26cqw;
+  border-block: .18cqw solid #5c5c58;
+}
+.date-numbers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3cqw;
+  padding-top: 5.2cqw;
+  font: 8cqw/1.2 Elegant, Georgia, serif;
+  white-space: nowrap;
+}
+.date-divider { font-family: Invitation, Arial, sans-serif; font-size: .9em; font-weight: 300; }
+.weekday { position: absolute; top: 19cqw; width: 100%; font-size: 3.65cqw; }
+.venue { top: 332.8cqw; color: #686864; }
+.venue-name { font-family: InvitationBold, Arial, sans-serif; font-size: 3.5cqw; font-weight: 700; }
+.venue address { margin-top: 3.2cqw; font-size: 4.15cqw; line-height: 1.35; font-style: normal; }
+.instructions { top: 358cqw; font-size: 3.4cqw; }
+
+.actions { top: 369.3cqw; left: 19.75%; width: 60.5%; display: grid; gap: 4.7cqw; }
+.action {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6.5cqw 1fr;
+  align-items: center;
+  gap: 1cqw;
+  width: 100%;
+  height: 12cqw;
+  min-height: 44px;
+  padding: 0 4cqw 0 7cqw;
+  border: .18cqw solid #9b9b98;
+  border-radius: 999px;
+  color: #646461;
+  background: #ffffffa8;
+  font-family: Invitation, Arial, sans-serif;
+  font-size: 3.35cqw;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .18s, border-color .18s;
+}
+.action svg { width: 6.5cqw; height: 6.5cqw; overflow: visible; }
+.action span { white-space: nowrap; }
+.action:hover { background: #f2f2f0; border-color: #5e5e59; }
+.action:active { background: #e8e8e5; }
+
+.closing-photo {
+  top: 399.7cqw;
+  bottom: 0;
+  z-index: -1;
+  mask-image: linear-gradient(180deg, transparent 0%, transparent 25%, #000 75%, #000 100%);
+}
+.closing-photo .photo { object-position: center bottom; }
+.signature { top: max(434.4cqw, calc(386.4cqw + 176px)); }
+.signature > p { font-size: 2.8cqw; }
+.signature .couple-names { position: relative; top: auto; margin-top: 2.4cqw; font-size: 3.1cqw; line-height: 1.9; }
+
+.information {
+  width: min(90vw, 420px);
+  padding: 40px 30px 30px;
+  border: 1px solid #bdbdb7;
+  color: #343430;
+  background: #fff;
+  text-align: center;
+  font-family: Invitation, Arial, sans-serif;
+}
+.information::backdrop { background: #0006; backdrop-filter: blur(3px); }
+.information h2 { margin: 0 0 18px; font: 24px/1.2 Elegant, Georgia, serif; }
+.information p { font-size: 18px; line-height: 1.6; }
+.dialog-close { margin-top: 12px; padding: 10px 30px; border: 1px solid #aaa; border-radius: 30px; background: white; color: inherit; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
