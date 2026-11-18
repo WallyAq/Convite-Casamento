@@ -69,15 +69,16 @@ button:focus-visible, a:focus-visible { outline: 3px solid #62625d; outline-offs
 .blessing { top: 124.5cqw; font-size: 3.9cqw; letter-spacing: .025em; }
 .families {
   top: 135.8cqw;
-  left: 11.5%;
-  width: 77%;
+  left: 5%;
+  width: 90%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15%;
-  font-size: 3.3cqw;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4cqw;
+  font-size: 2.6cqw;
   line-height: 1.5;
   text-align: left;
 }
+.families p { white-space: nowrap; }
 
 .couple-names {
   top: 158.3cqw;
@@ -253,9 +254,7 @@ html { scroll-behavior: smooth; }
   }
 
   .invitation .families {
-    margin: 20px 10% 0;
-    gap: 24px;
-    font-size: clamp(13px, 3.3cqw, 18px);
+    margin: 20px 5% 0;
     line-height: 1.7;
     text-align: center;
   }

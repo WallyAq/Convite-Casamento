@@ -3,8 +3,8 @@
 const convite = {
   noiva: "Maria Bianca Rodrigues Barreto",
   noivo: "Enderson Nunes de Oliveira",
-  paisDaNoiva: ["xxxxx", "xxxxx"],
-  paisDoNoivo: ["xxxxx", "xxxxx"],
+  paisDaNoiva: ["Cleide Maria Rodrigues do Nascimento", "Marcelo de Paulo Barreto"],
+  paisDoNoivo: ["Maria Rejane Nunes de Sousa", "Valtemir Queiroz de Oliveira"],
   dia: "18",
   mes: "03",
   ano: "2027",
